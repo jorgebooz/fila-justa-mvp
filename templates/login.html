@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entrar na gestão | Fila Justa</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body class="login-page"><header class="site-header"><div class="container header-content">
+<a href="/" class="brand"><img src="{{ url_for('static', filename='fila-justa-logo.svg') }}" alt="Fila Justa"></a>
+<a href="/">Voltar à fila pública</a></div></header>
+<main class="container login-layout"><section class="panel login-card">
+<span class="eyebrow">Acesso da equipe</span><h1>Entrar no Fila Justa</h1>
+<p>Área operacional destinada a gestores e operadores autorizados.</p>
+{% if erro %}<div class="notice" role="alert">{{ erro }}</div>{% endif %}
+{% if csrf_token %}<form method="post" action="{{ url_for('login') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+<label>E-mail institucional<input name="email" type="email" autocomplete="username" maxlength="254" required></label>
+<label>Senha<input name="senha" type="password" autocomplete="current-password" minlength="12" required></label>
+<button type="submit" class="primary-button">Entrar</button></form>{% endif %}
+</section></main></body></html>

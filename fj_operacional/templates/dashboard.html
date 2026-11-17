@@ -1,0 +1,11 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Indicadores · Fila Justa</title><link rel="stylesheet" href="{{ url_for('fj_operacional.static',filename='kanban.css') }}"></head>
+<body><header class="topbar"><a href="/"><img src="{{ url_for('fj_operacional.static', filename='fila-justa-logo.svg') }}" alt="Fila Justa" class="logo-small"></a>
+<nav><a href="/">Fila pública</a><a href="/gestao/demandas">Demandas</a><a href="/gestao/kanban">Kanban</a></nav>
+<div class="perfil">{{ perfil }}<form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="secondary">Sair</button></form></div></header>
+<main><p class="eyebrow">GESTÃO PÚBLICA</p><h1>Indicadores operacionais</h1>
+<p>Os números representam demandas cadastradas para atendimento, não todo o histórico da Gold.</p>
+<div class="metric-grid"><section><span>Demandas</span><strong>{{ metricas.total }}</strong></section><section><span>Ativas</span><strong>{{ metricas.ativas }}</strong></section><section><span>Atrasadas</span><strong>{{ metricas.atrasadas }}</strong></section><section><span>Resolvidas</span><strong>{{ metricas.por_status.resolvida }}</strong></section></div>
+<h2>Distribuição por situação</h2><div class="metric-grid">{% for nome,total in metricas.por_status.items() %}<section><span>{{ nome | replace('_',' ') | capitalize }}</span><strong>{{ total }}</strong></section>{% endfor %}</div>
+<p><a href="/gestao/kanban">Ver Kanban</a> · <a href="/gestao/demandas">Consultar demandas</a></p>
+</main></body></html>

@@ -1,78 +1,27 @@
 <!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Fila Justa: priorização experimental de ocorrências urbanas.">
-  <title>Fila Justa | Priorização urbana</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <header class="site-header">
-    <div class="container header-content">
-      <span class="brand">Fila Justa</span>
-      <span class="header-label">Projeto acadêmico</span>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="intro">
-      <span class="eyebrow">Inteligência de dados urbanos</span>
-      <h1>Priorização de ocorrências em São Paulo</h1>
-      <p>
-        Uma visão experimental das demandas urbanas, organizada
-        por indicadores para apoiar análises de prioridade territorial.
-      </p>
-    </section>
-
-    <section class="panel" aria-labelledby="titulo-fila">
-      <div class="panel-heading">
-        <div>
-          <h2 id="titulo-fila">Fila de priorização</h2>
-          <p>Primeiras 30 posições do processamento de dados de 2026.</p>
-        </div>
-      </div>
-
-      {% if error %}
-        <div class="notice" role="alert">
-          Os dados estão temporariamente indisponíveis.
-        </div>
-      {% elif rows %}
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Posição</th>
-                <th scope="col">Ocorrência</th>
-                <th scope="col">Distrito</th>
-                <th scope="col">Pontuação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in rows %}
-              <tr>
-                <td><strong>#{{ item.rank }}</strong></td>
-                <td>{{ item.tipo | replace('_', ' ') | capitalize }}</td>
-                <td>{{ item.area_nome }}</td>
-                <td class="score">{{ "%.2f"|format(item.score_0_100) }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <p class="empty">Nenhuma ocorrência disponível.</p>
-      {% endif %}
-    </section>
-
-    <p class="disclaimer">
-      Este é um protótipo acadêmico. As pontuações são experimentais e
-      não constituem uma classificação oficial da Prefeitura de São Paulo.
-    </p>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">Fila Justa · MVP de dados públicos · 2026</div>
-  </footer>
-</body>
-</html>
+<html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Fila Justa: priorização de ocorrências urbanas com critérios de equidade.">
+<title>Fila Justa | Priorização urbana</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head><body>
+<header class="site-header"><div class="container header-content">
+<a href="/" class="brand" aria-label="Fila Justa início"><img src="{{ url_for('static', filename='fila-justa-logo.svg') }}" alt="Fila Justa"></a>
+<nav class="main-nav"><a href="#fila">Fila de prioridade</a>{% if operacional_ativo %}<a class="nav-action" href="{{ url_for('login') }}">Acessar gestão</a>{% endif %}</nav>
+</div></header>
+<main class="container">
+<section class="intro"><span class="eyebrow">TECNOLOGIA PARA GESTÃO URBANA</span>
+<h1>Uma cidade melhor começa por prioridades mais justas.</h1>
+<p>O Fila Justa reúne dados de ocorrências urbanas e organiza prioridades com critérios explicáveis, considerando clima e desigualdade de registros entre territórios.</p>
+{% if operacional_ativo %}<a href="{{ url_for('login') }}" class="primary-button">Abrir central de gestão</a>{% endif %}
+</section>
+<section class="panel" id="fila" aria-labelledby="titulo-fila"><div class="panel-heading"><div>
+<span class="eyebrow">DADOS ANALÍTICOS</span><h2 id="titulo-fila">Fila de priorização</h2>
+<p>Primeiras 30 posições do processamento de dados de 2026.</p>
+</div><span class="read-only">Visualização pública</span></div>
+{% if error %}<div class="notice" role="alert">Os dados estão temporariamente indisponíveis.</div>
+{% elif rows %}<div class="table-wrapper"><table><thead><tr><th scope="col">Posição</th><th scope="col">Ocorrência</th><th scope="col">Distrito</th><th scope="col">Pontuação</th><th scope="col">Cluster ID</th></tr></thead>
+<tbody>{% for item in rows %}<tr><td><strong>#{{ item.rank }}</strong></td><td>{{ item.tipo | replace('_',' ') | capitalize }}</td><td>{{ item.area_nome }}</td><td class="score">{{ "%.2f"|format(item.score_0_100) }}</td><td class="cluster-id">{{ item.cluster_id or "—" }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p class="empty">Nenhuma ocorrência disponível.</p>{% endif %}
+</section><p class="disclaimer">Projeto acadêmico e experimental. As pontuações não constituem uma classificação oficial da Prefeitura de São Paulo. A gestão de demandas, quando habilitada, mantém dados operacionais separados do histórico analítico.</p>
+</main><footer class="site-footer"><div class="container">Fila Justa · Engenharia de Software · 2026</div></footer></body></html>
