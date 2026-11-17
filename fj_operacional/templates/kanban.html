@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestão de demandas · Fila Justa</title>
+<link rel="stylesheet" href="{{ url_for('fj_operacional.static', filename='kanban.css') }}">
+</head><body data-perfil="{{ perfil }}">
+<header class="topbar">
+  <div class="logo"><img alt="Fila Justa" src="{{ url_for('fj_operacional.static', filename='fila-justa-logo.svg') }}"></div>
+  <nav aria-label="Navegação da gestão"><strong>Gestão de demandas</strong><a href="/">Fila pública</a><a href="/gestao/demandas">Demandas</a><a href="/gestao/dashboard">Indicadores</a></nav>
+  <div class="perfil" aria-label="Perfil de acesso">{{ perfil }}
+    <form method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="secondary">Sair</button></form></div>
+</header>
+<main>
+  <div class="heading">
+    <div><p class="eyebrow">CENTRAL OPERACIONAL</p><h1>Quadro de demandas</h1><p>Acompanhe o atendimento sem alterar a fila analítica.</p></div>
+    <div class="actions">
+      <button id="btn-importar" type="button" class="secondary">Importar da fila</button>
+      <button id="btn-nova" type="button">+ Nova demanda</button>
+    </div>
+  </div>
+  <div id="aviso" role="status" aria-live="polite"></div>
+  <div class="board" id="kanban" aria-label="Colunas de andamento">
+    <section class="column" data-status="nova"><h2>Nova <span class="count">0</span></h2><div class="cards"></div></section>
+    <section class="column" data-status="pendente"><h2>Pendente <span class="count">0</span></h2><div class="cards"></div></section>
+    <section class="column" data-status="em_andamento"><h2>Em andamento <span class="count">0</span></h2><div class="cards"></div></section>
+    <section class="column" data-status="aguardando_validacao"><h2>Aguardando validação <span class="count">0</span></h2><div class="cards"></div></section>
+    <section class="column" data-status="resolvida"><h2>Resolvida <span class="count">0</span></h2><div class="cards"></div></section>
+    <section class="column" data-status="cancelada"><h2>Cancelada <span class="count">0</span></h2><div class="cards"></div></section>
+  </div>
+  <p class="note">Cada coluna exibe até 30 registros recentes; a contagem mostra o total operacional. Para ver todos os registros, acesse <a href="/gestao/demandas">Demandas</a>.</p>
+</main>
+<dialog id="detalhe"><form method="dialog" class="modal">
+  <div class="modal-head"><h2 id="modal-titulo">Demanda</h2><button value="cancel" class="icon-btn" aria-label="Fechar">✕</button></div>
+  <div class="modal-body">
+    <p id="modal-erro" class="erro" role="alert" aria-live="assertive"></p>
+    <label>Título <input id="titulo" maxlength="160" minlength="3" required></label>
+    <label>Descrição <textarea id="descricao" rows="4" maxlength="3000"></textarea></label>
+    <div class="inline"><label>Tipo <input id="tipo" maxlength="120"></label><label>Distrito <input id="area_nome" maxlength="160"></label></div>
+    <label>Prazo <input id="prazo_em" type="datetime-local"><small>Horário local do navegador; salvo em UTC.</small></label>
+    <p id="dados-origem" class="note"></p>
+    <h3>Mudar situação</h3>
+    <label>Próximo estado <select id="novo-status"></select></label>
+    <label>Justificativa <textarea id="justificativa" rows="2" maxlength="2000" placeholder="Obrigatória para concluir, cancelar ou reabrir"></textarea></label>
+    <div id="historico" class="history" aria-label="Histórico de alterações"></div>
+  </div>
+  <div class="modal-actions"><button id="btn-salvar" type="button" class="secondary">Salvar dados</button><button id="btn-transicao" type="button">Atualizar situação</button></div>
+</form></dialog>
+<dialog id="importar-modal"><form method="dialog" class="modal">
+  <div class="modal-head"><h2>Importar da fila Gold</h2><button value="cancel" class="icon-btn" aria-label="Fechar">✕</button></div>
+  <div class="modal-body">
+    <label>ID do cluster <input id="cluster-id" maxlength="300" placeholder="Cole o cluster_id da fila" required></label>
+    <p class="note">Apenas a ocorrência selecionada será importada. Um cluster já importado conserva seu estado e histórico.</p>
+    <p id="importar-erro" class="erro" role="alert" aria-live="assertive"></p>
+  </div>
+  <div class="modal-actions"><button id="confirmar-importar" type="button">Importar demanda</button></div>
+</form></dialog>
+<meta name="fj-csrf" content="{{ csrf_token }}">
+<script src="{{ url_for('fj_operacional.static', filename='kanban.js') }}" defer></script>
+</body></html>
