@@ -1,0 +1,104 @@
+name: CD - Azure App Service
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fila-justa-azure-production
+  cancel-in-progress: false
+
+jobs:
+  testes-pre-deploy:
+    name: Validar codigo antes da publicacao
+    # Desativado em push por padrao. Ativar apenas quando a variavel
+    # de repositorio FJ_AUTO_DEPLOY for explicitamente 'true'.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.FJ_AUTO_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      - name: Testar codigo
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip check
+          python -m compileall -q app.py fj_operacional tests
+          python -m pytest -q
+
+  publicar:
+    name: Publicar no Azure (OIDC)
+    needs: testes-pre-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Verificar configuracao antes de publicar
+        shell: bash
+        env:
+          APP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          for name in APP_NAME CLIENT_ID TENANT_ID SUBSCRIPTION_ID; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Configuracao ausente: $name. Consulte docs/CI_CD.md"
+              exit 1
+            fi
+          done
+          if [[ ! "$APP_NAME" =~ ^[a-zA-Z0-9-]+$ ]]; then
+            echo "::error::AZURE_WEBAPP_NAME invalido"
+            exit 1
+          fi
+
+      - name: Baixar codigo
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Entrar no Azure com OIDC (sem senha de publicacao)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Publicar Flask no Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: .
+
+      - name: Verificar rota de saude depois da publicacao
+        shell: bash
+        env:
+          APP_NAME: ${{ vars.AZURE_WEBAPP_NAME }}
+        run: |
+          set -euo pipefail
+          URL="https://${APP_NAME}.azurewebsites.net/health"
+          echo "Verificando /health na aplicacao publicada"
+          curl --fail --silent --show-error --location --retry 10 --retry-delay 10 --retry-all-errors --max-time 20 "$URL"
+          echo

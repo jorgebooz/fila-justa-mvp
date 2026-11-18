@@ -10,25 +10,53 @@ on:
 permissions:
   contents: read
 
-jobs:
-  testes:
-    name: Testes Python
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  diagnostico-runner:
+    name: Diagnostico do runner (sem checkout)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirmar inicializacao do runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Runner iniciado com sucesso"
+          echo "RUNNER_OS=$RUNNER_OS"
+          echo "RUNNER_ARCH=$RUNNER_ARCH"
+          echo "GITHUB_EVENT_NAME=$GITHUB_EVENT_NAME"
+          echo "GITHUB_REF=$GITHUB_REF"
+
+  testes:
+    name: Testes e verificacao Python 3.12
+    needs: diagnostico-runner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Baixar codigo
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
-      - name: Configurar Python 3.12
+      - name: Configurar Python
         uses: actions/setup-python@v7
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias de desenvolvimento
         run: |
-          python -m pip install --upgrade pip
           python -m pip install -r requirements-dev.txt
+          python -m pip check
 
-      - name: Executar testes
+      - name: Conferir sintaxe Python
+        run: python -m compileall -q app.py fj_operacional tests
+
+      - name: Executar todos os testes
         run: python -m pytest -q
